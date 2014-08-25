@@ -13,13 +13,6 @@ type macOSXVersionSuite struct{}
 
 var _ = gc.Suite(&macOSXVersionSuite{})
 
-func (*macOSXVersionSuite) TestGetSysctlVersionPlatform(c *gc.C) {
-	// Test that sysctlVersion returns something that looks like a dotted revision number
-	releaseVersion, err := sysctlVersion()
-	c.Assert(err, gc.IsNil)
-	c.Check(releaseVersion, gc.Matches, `\d+\..*`)
-}
-
 func (s *macOSXVersionSuite) TestOSVersion(c *gc.C) {
 	knownSeries := set.Strings{}
 	for _, series := range macOSXSeries {

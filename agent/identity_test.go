@@ -6,6 +6,7 @@ package agent
 import (
 	"io/ioutil"
 	"os"
+	"runtime"
 
 	"github.com/juju/names"
 	gc "launchpad.net/gocheck"
@@ -56,8 +57,9 @@ func (s *identitySuite) TestWriteSystemIdentityFile(c *gc.C) {
 
 	fi, err := os.Stat(conf.SystemIdentityPath())
 	c.Assert(err, gc.IsNil)
-	c.Check(fi.Mode().Perm(), gc.Equals, os.FileMode(0600))
-
+	if runtime.GOOS == "linux" {
+		c.Check(fi.Mode().Perm(), gc.Equals, os.FileMode(0600))
+	}
 	// ensure that file is deleted when SystemIdentity is empty
 	info := servingInfo
 	info.SystemIdentity = ""
@@ -65,7 +67,10 @@ func (s *identitySuite) TestWriteSystemIdentityFile(c *gc.C) {
 	c.Assert(err, gc.IsNil)
 	err = WriteSystemIdentityFile(conf)
 	c.Assert(err, gc.IsNil)
-
 	fi, err = os.Stat(conf.SystemIdentityPath())
-	c.Assert(err, gc.ErrorMatches, `stat .*: no such file or directory`)
+	if runtime.GOOS == "linux" {
+		c.Assert(err, gc.ErrorMatches, `stat .*: no such file or directory`)
+	} else if runtime.GOOS == "windows" {
+		c.Assert(err, gc.ErrorMatches, `GetFileAttributesEx .*: The system cannot find the file specified.`)
+	}
 }
