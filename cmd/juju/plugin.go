@@ -205,8 +205,11 @@ func findPlugins() []string {
 			continue
 		}
 		for _, entry := range entries {
-			if strings.HasPrefix(entry.Name(), JujuPluginPrefix) && (entry.Mode()&0111) != 0 {
-				plugins = append(plugins, entry.Name())
+			if strings.HasPrefix(entry.Name(), JujuPluginPrefix) {
+				_, err = exec.LookPath(entry.Name())
+				if err == nil {
+					plugins = append(plugins, entry.Name())
+				}
 			}
 		}
 	}

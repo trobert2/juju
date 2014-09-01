@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"runtime"
+	"strings"
 	"text/template"
 	"time"
 
@@ -29,7 +31,11 @@ var _ = gc.Suite(&PluginSuite{})
 func (suite *PluginSuite) SetUpTest(c *gc.C) {
 	suite.FakeJujuHomeSuite.SetUpTest(c)
 	suite.oldPath = os.Getenv("PATH")
-	os.Setenv("PATH", "/bin:"+gitjujutesting.HomePath())
+	if runtime.GOOS != "windows" {
+		os.Setenv("PATH", "/bin:"+gitjujutesting.HomePath())
+	} else {
+		os.Setenv("PATH", gitjujutesting.HomePath())
+	}
 }
 
 func (suite *PluginSuite) TearDownTest(c *gc.C) {
@@ -42,15 +48,35 @@ func (*PluginSuite) TestFindPlugins(c *gc.C) {
 	c.Assert(plugins, gc.DeepEquals, []string{})
 }
 
+func list_dir(dir string) {
+	files, _ := ioutil.ReadDir(dir)
+	for _, f := range files {
+		fmt.Println(f.Name())
+	}
+}
+
 func (suite *PluginSuite) TestFindPluginsOrder(c *gc.C) {
-	suite.makePlugin("foo", 0744)
-	suite.makePlugin("bar", 0654)
-	suite.makePlugin("baz", 0645)
+	var compare []string
+	if runtime.GOOS != "windows" {
+		suite.makePlugin("foo", 0744)
+		suite.makePlugin("bar", 0654)
+		suite.makePlugin("baz", 0645)
+		compare = append(compare, "juju-bar", "juju-baz", "juju-foo")
+	} else {
+		suite.makePluginWindows("foo")
+		suite.makePluginWindows("bar")
+		suite.makePluginWindows("baz")
+		compare = append(compare, "juju-bar.bat", "juju-baz.bat", "juju-foo.bat")
+	}
 	plugins := findPlugins()
-	c.Assert(plugins, gc.DeepEquals, []string{"juju-bar", "juju-baz", "juju-foo"})
+	c.Assert(plugins, gc.DeepEquals, compare)
+
 }
 
 func (suite *PluginSuite) TestFindPluginsIgnoreNotExec(c *gc.C) {
+	if runtime.GOOS == "windows" {
+		c.Skip("Different permissions on Windows!")
+	}
 	suite.makePlugin("foo", 0644)
 	suite.makePlugin("bar", 0666)
 	plugins := findPlugins()
@@ -58,25 +84,39 @@ func (suite *PluginSuite) TestFindPluginsIgnoreNotExec(c *gc.C) {
 }
 
 func (suite *PluginSuite) TestRunPluginExising(c *gc.C) {
-	suite.makePlugin("foo", 0755)
+	if runtime.GOOS == "windows" {
+		suite.makePluginWindows("foo")
+	} else {
+		suite.makePlugin("foo", 0755)
+
+	}
 	ctx := testing.Context(c)
-	err := RunPlugin(ctx, "foo", []string{"some params"})
+	err := RunPlugin(ctx, "foo.bat", []string{"some params"})
 	c.Assert(err, gc.IsNil)
 	c.Assert(testing.Stdout(ctx), gc.Equals, "foo some params\n")
 	c.Assert(testing.Stderr(ctx), gc.Equals, "")
 }
 
 func (suite *PluginSuite) TestRunPluginWithFailing(c *gc.C) {
-	suite.makeFailingPlugin("foo", 2)
+	failMessage := "failing\n"
+	if runtime.GOOS != "windows" {
+		suite.makeFailingPlugin("foo", 2)
+	} else {
+		suite.makeFailingPluginWindows("foo", 2)
+		failMessage = strings.Replace(failMessage, "\n", "\r\n", -1)
+	}
 	ctx := testing.Context(c)
 	err := RunPlugin(ctx, "foo", []string{"some params"})
 	c.Assert(err, gc.ErrorMatches, "subprocess encountered error code 2")
 	c.Assert(err, jc.Satisfies, cmd.IsRcPassthroughError)
-	c.Assert(testing.Stdout(ctx), gc.Equals, "failing\n")
+	c.Assert(testing.Stdout(ctx), gc.Equals, failMessage)
 	c.Assert(testing.Stderr(ctx), gc.Equals, "")
 }
 
 func (suite *PluginSuite) TestGatherDescriptionsInParallel(c *gc.C) {
+	if runtime.GOOS == "windows" {
+		c.Skip("Skip on Windows!")
+	}
 	// Make plugins that will deadlock if we don't start them in parallel.
 	// Each plugin depends on another one being started before they will
 	// complete. They make a full loop, so no sequential ordering will ever
@@ -85,7 +125,6 @@ func (suite *PluginSuite) TestGatherDescriptionsInParallel(c *gc.C) {
 	suite.makeFullPlugin(PluginParams{Name: "bar", Creates: "bar", DependsOn: "baz"})
 	suite.makeFullPlugin(PluginParams{Name: "baz", Creates: "baz", DependsOn: "error"})
 	suite.makeFullPlugin(PluginParams{Name: "error", ExitStatus: 1, Creates: "error", DependsOn: "foo"})
-
 	// If the code was wrong, GetPluginDescriptions would deadlock,
 	// so timeout after a short while
 	resultChan := make(chan []PluginDescription)
@@ -130,6 +169,16 @@ func (suite *PluginSuite) TestHelpPluginsWithPlugins(c *gc.C) {
 bar  bar description
 foo  foo description
 `
+
+	if runtime.GOOS == "windows" {
+		expectedPlugins = `
+
+bar.bat  bar description
+foo.bat  foo description
+`
+		output = strings.Replace(output, "\r\n", "\n", -1)
+		output = strings.Replace(output, "\"", "", -1)
+	}
 	c.Assert(output, jc.HasSuffix, expectedPlugins)
 }
 
@@ -140,6 +189,10 @@ func (suite *PluginSuite) TestHelpPluginName(c *gc.C) {
 
 something useful
 `
+	if runtime.GOOS == "windows" {
+		expectedHelp = strings.Replace(expectedHelp, "\n", "\r\n", -1)
+		output = strings.Replace(output, "\"", "", -1)
+	}
 	c.Assert(output, gc.Matches, expectedHelp)
 }
 
@@ -156,6 +209,10 @@ func (suite *PluginSuite) TestHelpAsArg(c *gc.C) {
 
 something useful
 `
+	if runtime.GOOS == "windows" {
+		expectedHelp = strings.Replace(expectedHelp, "\n", "\r\n", -1)
+		output = strings.Replace(output, "\"", "", -1)
+	}
 	c.Assert(output, gc.Matches, expectedHelp)
 }
 
@@ -163,26 +220,46 @@ func (suite *PluginSuite) TestDebugAsArg(c *gc.C) {
 	suite.makeFullPlugin(PluginParams{Name: "foo"})
 	output := badrun(c, 0, "foo", "--debug")
 	expectedDebug := "some debug\n"
+	if runtime.GOOS == "windows" {
+		expectedDebug = strings.Replace(expectedDebug, "\n", "\r\n", -1)
+		output = strings.Replace(output, "\"", "", -1)
+	}
 	c.Assert(output, gc.Matches, expectedDebug)
 }
 
 func (suite *PluginSuite) TestJujuEnvVars(c *gc.C) {
 	suite.makeFullPlugin(PluginParams{Name: "foo"})
 	output := badrun(c, 0, "foo", "-e", "myenv", "-p", "pluginarg")
-	expectedDebug := `foo -e myenv -p pluginarg\n.*env is:  myenv\n.*home is: .*\.juju\n`
+	expectedDebug := "foo -e myenv -p pluginarg\n.*env is:  myenv\n.*home is: .*\\.juju\n"
+	if runtime.GOOS == "windows" {
+		expectedDebug = strings.Replace(expectedDebug, "\n", "\r\n", -1)
+		output = strings.Replace(output, "\"", "", -1)
+	}
 	c.Assert(output, gc.Matches, expectedDebug)
 }
 
 func (suite *PluginSuite) makePlugin(name string, perm os.FileMode) {
-	content := fmt.Sprintf("#!/bin/bash --norc\necho %s $*", name)
+	content := fmt.Sprintf(`#!/bin/bash \necho %s $1 $2 $3 $4`, name)
 	filename := gitjujutesting.HomePath(JujuPluginPrefix + name)
 	ioutil.WriteFile(filename, []byte(content), perm)
+}
+
+func (suite *PluginSuite) makePluginWindows(name string) {
+	content := fmt.Sprintf("@echo off \necho %s %*", name)
+	filename := gitjujutesting.HomePath(JujuPluginPrefix + name)
+	ioutil.WriteFile(filename+".bat", []byte(content), 0755)
 }
 
 func (suite *PluginSuite) makeFailingPlugin(name string, exitStatus int) {
 	content := fmt.Sprintf("#!/bin/bash --norc\necho failing\nexit %d", exitStatus)
 	filename := gitjujutesting.HomePath(JujuPluginPrefix + name)
 	ioutil.WriteFile(filename, []byte(content), 0755)
+}
+
+func (suite *PluginSuite) makeFailingPluginWindows(name string, exitStatus int) {
+	content := fmt.Sprintf("@echo off & echo failing& exit %d", exitStatus)
+	filename := gitjujutesting.HomePath(JujuPluginPrefix + name)
+	ioutil.WriteFile(filename+".bat", []byte(content), 0755)
 }
 
 type PluginParams struct {
@@ -192,7 +269,7 @@ type PluginParams struct {
 	DependsOn  string
 }
 
-const pluginTemplate = `#!/bin/bash --norc
+const pluginTemplateBash = `#!/bin/bash --norc
 
 if [ "$1" = "--description" ]; then
   if [ -n "{{.Creates}}" ]; then
@@ -224,11 +301,54 @@ echo "home is: " $JUJU_HOME
 exit {{.ExitStatus}}
 `
 
+const pluginTemplateBatch = `@echo off
+if [%1] equ [--description] (
+  if [{{.Creates}}] neq [] (
+  	if not exist "{{.Creates}}" (
+    	fsutil file createnew "{{.Creates}}" 0
+    	) else (
+    		copy /b "{{.Creates}}" +,,
+    	)
+ 	)
+  if [{{.DependsOn}}] neq [] (
+    # Sleep 1sec while waiting to allow other stuff to do work
+    :loop 
+    if not exist "{{.DependsOn}}" (
+    	 timeout 1
+    	 goto loop)
+ 	)
+  echo "{{.Name}} description"
+  exit {{.ExitStatus}}
+)
+if [%1] equ [--help] (
+  echo "{{.Name}} longer help"
+  echo ""
+  echo "something useful"
+  exit {{.ExitStatus}}
+)
+if [%1] equ [--debug] (
+  echo "some debug"
+  exit {{.ExitStatus}}
+)
+echo {{.Name}} %*
+echo "env is:" %JUJU_ENV%
+echo "home is:" %JUJU_HOME%
+exit {{.ExitStatus}}
+`
+
 func (suite *PluginSuite) makeFullPlugin(params PluginParams) {
-	// Create a new template and parse the plugin into it.
-	t := template.Must(template.New("plugin").Parse(pluginTemplate))
+	var t *template.Template
 	content := &bytes.Buffer{}
 	filename := gitjujutesting.HomePath("juju-" + params.Name)
+
+	// Create a new template and parse the plugin into it.
+	if runtime.GOOS != "windows" {
+		t = template.Must(template.New("plugin").Parse(pluginTemplateBash))
+	} else {
+		t = template.Must(template.New("plugin").Parse(pluginTemplateBatch))
+		filename = filename + ".bat"
+	}
+
 	// Create the files in the temp dirs, so we don't pollute the working space
 	if params.Creates != "" {
 		params.Creates = gitjujutesting.HomePath(params.Creates)

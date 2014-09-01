@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/url"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	jc "github.com/juju/testing/checkers"
@@ -100,6 +101,12 @@ var scpTests = []struct {
 		args:  []string{"5:foo", "bar"},
 		error: "machine 5 not found",
 	},
+}
+
+func (s *SCPSuite) SetUpSuite(c *gc.C) {
+	if runtime.GOOS == "windows" {
+		c.Skip("scp not supported on Windows")
+	}
 }
 
 func (s *SCPSuite) TestSCPCommand(c *gc.C) {
