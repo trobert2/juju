@@ -92,11 +92,12 @@ func (f *fileStorageReader) List(prefix string) ([]string, error) {
 	prefix = filepath.Join(f.path, prefix)
 	dir := filepath.Dir(prefix)
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		fmt.Println(path)
 		if err != nil {
 			return err
 		}
 		if !info.IsDir() && strings.HasPrefix(path, prefix) {
-			names = append(names, path[len(f.path)+1:])
+			names = append(names, filepath.ToSlash(path[len(f.path)+1:]))
 		}
 		return nil
 	})
@@ -109,7 +110,7 @@ func (f *fileStorageReader) List(prefix string) ([]string, error) {
 
 // URL implements storage.StorageReader.URL.
 func (f *fileStorageReader) URL(name string) (string, error) {
-	return "file://" + filepath.Join(f.path, name), nil
+	return "file://" + filepath.ToSlash(filepath.Join(utils.StripDriveLetter(f.path), name)), nil
 }
 
 // DefaultConsistencyStrategy implements storage.StorageReader.ConsistencyStrategy.

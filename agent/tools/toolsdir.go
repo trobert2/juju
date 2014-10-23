@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/juju/errors"
@@ -182,6 +183,8 @@ func ChangeAgentTools(dataDir string, agentName string, vers version.Binary) (*c
 	toolPath := ToolsDir(dataDir, tools.Version.String())
 	toolsDir := ToolsDir(dataDir, agentName)
 
+	toolPath = filepath.FromSlash(toolPath)
+	toolsDir = filepath.FromSlash(toolsDir)
 	err = symlink.Replace(toolsDir, toolPath)
 	if err != nil {
 		return nil, fmt.Errorf("cannot replace tools directory: %s", err)
