@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"path/filepath"
 	"strings"
 
 	"github.com/juju/errors"
@@ -69,7 +68,7 @@ func urlJoin(baseURL, relpath string) string {
 
 // Fetch is defined in simplestreams.DataSource.
 func (h *urlDataSource) Fetch(path string) (io.ReadCloser, string, error) {
-	dataURL := filepath.ToSlash(urlJoin(h.baseURL, path))
+	dataURL := urlJoin(h.baseURL, path)
 	client := utils.GetHTTPClient(h.hostnameVerification)
 	// dataURL can be http:// or file://
 	dataURL = utils.StripDriveLetter(dataURL)
@@ -92,7 +91,7 @@ func (h *urlDataSource) Fetch(path string) (io.ReadCloser, string, error) {
 
 // URL is defined in simplestreams.DataSource.
 func (h *urlDataSource) URL(path string) (string, error) {
-	return urlJoin(h.baseURL, path), nil
+	return utils.StripDriveLetter(urlJoin(h.baseURL, path)), nil
 }
 
 // SetAllowRetry is defined in simplestreams.DataSource.

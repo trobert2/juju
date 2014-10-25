@@ -6,7 +6,6 @@ package tools
 import (
 	"fmt"
 	"net/url"
-	"path/filepath"
 	"strings"
 	"sync"
 
@@ -129,13 +128,12 @@ func ToolsURL(source string) (string, error) {
 	}
 	// If source is a raw directory, we need to append the file:// prefix
 	// so it can be used as a URL.
-	defaultURL := filepath.ToSlash(source)
-	defaultURL = utils.StripDriveLetter(defaultURL)
+	defaultURL := utils.StripDriveLetter(source)
 	u, err := url.Parse(defaultURL)
 	if err != nil {
 		return "", fmt.Errorf("invalid default tools URL %s: %v", defaultURL, err)
 	}
-	if u.Scheme == "" {
+	if u.Scheme == "" || u.Scheme == "c" {
 		defaultURL = "file://" + defaultURL
 		if !strings.HasSuffix(defaultURL, "/"+storage.BaseToolsPath) {
 			defaultURL = fmt.Sprintf("%s/%s", defaultURL, storage.BaseToolsPath)
