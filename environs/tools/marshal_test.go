@@ -59,7 +59,7 @@ var expectedIndex = `{
             "updated": "Thu, 01 Jan 1970 00:00:00 +0000",
             "format": "products:1.0",
             "datatype": "content-download",
-            "path": "streams/v1/com.ubuntu.juju:released:tools.json",
+            "path": "streams/v1/com.ubuntu.juju-released-tools.json",
             "products": [
                 "com.ubuntu.juju:12.04:amd64",
                 "com.ubuntu.juju:12.04:arm",
@@ -253,8 +253,8 @@ func (s *marshalSuite) TestMarshalProducts(c *gc.C) {
 
 func assertProducts(c *gc.C, obtainedProducts map[string][]byte) {
 	c.Assert(obtainedProducts, gc.HasLen, 2)
-	c.Assert(string(obtainedProducts["streams/v1/com.ubuntu.juju:released:tools.json"]), gc.Equals, expectedReleasedProducts)
-	c.Assert(string(obtainedProducts["streams/v1/com.ubuntu.juju:proposed:tools.json"]), gc.Equals, expectedProposedProducts)
+	c.Assert(string(obtainedProducts["streams/v1/com.ubuntu.juju-released-tools.json"]), gc.Equals, expectedReleasedProducts)
+	c.Assert(string(obtainedProducts["streams/v1/com.ubuntu.juju-proposed-tools.json"]), gc.Equals, expectedProposedProducts)
 }
 
 func (s *marshalSuite) TestMarshal(c *gc.C) {

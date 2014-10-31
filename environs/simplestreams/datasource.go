@@ -71,7 +71,8 @@ func (h *urlDataSource) Fetch(path string) (io.ReadCloser, string, error) {
 	dataURL := urlJoin(h.baseURL, path)
 	client := utils.GetHTTPClient(h.hostnameVerification)
 	// dataURL can be http:// or file://
-	dataURL = utils.StripDriveLetter(dataURL)
+	// MakeFileURL will only modify the URL if it's a file URL
+	dataURL = utils.MakeFileURL(dataURL)
 	resp, err := client.Get(dataURL)
 	if err != nil {
 		logger.Debugf("Got error requesting %q: %v", dataURL, err)
@@ -91,7 +92,7 @@ func (h *urlDataSource) Fetch(path string) (io.ReadCloser, string, error) {
 
 // URL is defined in simplestreams.DataSource.
 func (h *urlDataSource) URL(path string) (string, error) {
-	return utils.StripDriveLetter(urlJoin(h.baseURL, path)), nil
+	return utils.MakeFileURL(urlJoin(h.baseURL, path)), nil
 }
 
 // SetAllowRetry is defined in simplestreams.DataSource.

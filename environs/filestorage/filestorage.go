@@ -58,6 +58,7 @@ func (f *fileStorageReader) Get(name string) (io.ReadCloser, error) {
 		}
 	}
 	filename := f.fullPath(name)
+	fmt.Println("GOTEMBOYS" + filename + "\n" + name)
 	fi, err := os.Stat(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -109,7 +110,7 @@ func (f *fileStorageReader) List(prefix string) ([]string, error) {
 
 // URL implements storage.StorageReader.URL.
 func (f *fileStorageReader) URL(name string) (string, error) {
-	return "file://" + utils.StripDriveLetter(filepath.Join(f.path, name)), nil
+	return utils.MakeFileURL(filepath.Join(f.path, name)), nil
 }
 
 // DefaultConsistencyStrategy implements storage.StorageReader.ConsistencyStrategy.

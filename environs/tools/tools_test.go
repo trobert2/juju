@@ -46,7 +46,7 @@ func (s *SimpleStreamsToolsSuite) SetUpSuite(c *gc.C) {
 }
 
 func (s *SimpleStreamsToolsSuite) SetUpTest(c *gc.C) {
-	s.ToolsFixture.DefaultBaseURL = "file://" + utils.StripDriveLetter(s.publicToolsDir)
+	s.ToolsFixture.DefaultBaseURL = utils.MakeFileURL(s.publicToolsDir)
 	s.BaseSuite.SetUpTest(c)
 	s.ToolsFixture.SetUpTest(c)
 	s.origCurrentVersion = version.Current
@@ -62,7 +62,7 @@ func (s *SimpleStreamsToolsSuite) TearDownTest(c *gc.C) {
 
 func (s *SimpleStreamsToolsSuite) reset(c *gc.C, attrs map[string]interface{}) {
 	final := map[string]interface{}{
-		"agent-metadata-url": "file://" + utils.StripDriveLetter(s.customToolsDir),
+		"agent-metadata-url": utils.MakeFileURL(s.customToolsDir),
 		"agent-stream":       "proposed",
 	}
 	for k, v := range attrs {

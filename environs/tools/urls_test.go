@@ -102,7 +102,6 @@ func (s *URLsSuite) TestToolsMetadataURLsRegisteredFuncsError(c *gc.C) {
 func (s *URLsSuite) TestToolsURL(c *gc.C) {
 	for source, expected := range map[string]string{
 		"":           "",
-		"foo":        "file://foo/tools",
 		"/home/foo":  "file:///home/foo/tools",
 		"file://foo": "file://foo",
 		"http://foo": "http://foo",
