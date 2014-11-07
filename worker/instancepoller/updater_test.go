@@ -6,7 +6,6 @@ package instancepoller
 
 import (
 	"errors"
-	stdtesting "testing"
 	"time"
 
 	jc "github.com/juju/testing/checkers"
@@ -15,10 +14,6 @@ import (
 	"github.com/juju/juju/state"
 	coretesting "github.com/juju/juju/testing"
 )
-
-func TestPackage(t *stdtesting.T) {
-	coretesting.MgoTestPackage(t)
-}
 
 var _ = gc.Suite(&updaterSuite{})
 

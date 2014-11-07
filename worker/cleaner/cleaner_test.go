@@ -4,7 +4,6 @@
 package cleaner_test
 
 import (
-	stdtesting "testing"
 	"time"
 
 	gc "gopkg.in/check.v1"
@@ -14,10 +13,6 @@ import (
 	"github.com/juju/juju/worker"
 	"github.com/juju/juju/worker/cleaner"
 )
-
-func TestPackage(t *stdtesting.T) {
-	coretesting.MgoTestPackage(t)
-}
 
 type CleanerSuite struct {
 	testing.JujuConnSuite

@@ -6,7 +6,6 @@ package singular_test
 import (
 	"fmt"
 	"sync"
-	stdtesting "testing"
 	"time"
 
 	jc "github.com/juju/testing/checkers"
@@ -18,10 +17,6 @@ import (
 )
 
 var _ = gc.Suite(&singularSuite{})
-
-func TestPackage(t *stdtesting.T) {
-	gc.TestingT(t)
-}
 
 type singularSuite struct {
 	testing.BaseSuite

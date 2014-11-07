@@ -4,8 +4,6 @@
 package localstorage_test
 
 import (
-	stdtesting "testing"
-
 	gc "gopkg.in/check.v1"
 	goyaml "gopkg.in/yaml.v1"
 
@@ -15,10 +13,6 @@ import (
 type configSuite struct{}
 
 var _ = gc.Suite(&configSuite{})
-
-func TestPackage(t *stdtesting.T) {
-	gc.TestingT(t)
-}
 
 type localStorageConfig struct {
 	storageDir  string

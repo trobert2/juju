@@ -2,17 +2,17 @@
 // Copyright 2014 Cloudbase Solutions SRL
 // Licensed under the AGPLv3, see LICENCE file for details.
 
-package firewaller_test
+package resumer_test
 
 import (
 	"runtime"
 	stdtesting "testing"
 
-	coretesting "github.com/juju/juju/testing"
+	"github.com/juju/juju/testing"
 )
 
-func TestAll(t *stdtesting.T) {
+func Test(t *stdtesting.T) {
 	if runtime.GOOS != "windows" {
-		coretesting.MgoTestPackage(t)
+		testing.MgoTestPackage(t)
 	}
 }
