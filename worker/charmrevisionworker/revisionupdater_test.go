@@ -4,7 +4,6 @@
 package charmrevisionworker_test
 
 import (
-	stdtesting "testing"
 	"time"
 
 	jc "github.com/juju/testing/checkers"
@@ -19,10 +18,6 @@ import (
 	coretesting "github.com/juju/juju/testing"
 	"github.com/juju/juju/worker/charmrevisionworker"
 )
-
-func TestPackage(t *stdtesting.T) {
-	coretesting.MgoTestPackage(t)
-}
 
 type RevisionUpdateSuite struct {
 	testing.CharmSuite

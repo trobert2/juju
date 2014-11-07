@@ -5,19 +5,13 @@ package resumer_test
 
 import (
 	"sync"
-	stdtesting "testing"
 	"time"
 
 	gc "gopkg.in/check.v1"
 
 	"github.com/juju/juju/juju/testing"
-	coretesting "github.com/juju/juju/testing"
 	"github.com/juju/juju/worker/resumer"
 )
-
-func TestPackage(t *stdtesting.T) {
-	coretesting.MgoTestPackage(t)
-}
 
 type ResumerSuite struct {
 	testing.JujuConnSuite

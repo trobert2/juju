@@ -4,7 +4,6 @@
 package minunitsworker_test
 
 import (
-	stdtesting "testing"
 	"time"
 
 	"github.com/juju/loggo"
@@ -17,10 +16,6 @@ import (
 )
 
 var logger = loggo.GetLogger("juju.worker.minunitsworker_test")
-
-func TestPackage(t *stdtesting.T) {
-	coretesting.MgoTestPackage(t)
-}
 
 type minUnitsWorkerSuite struct {
 	testing.JujuConnSuite
